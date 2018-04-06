@@ -281,6 +281,11 @@ namespace AutoComplete
 
         private void SelectItem()
         {
+            if (_listBox.SelectedItem == null)
+            {
+                return;
+            }
+
             var text = GetItemText(_listBox.SelectedItem);
 
             if (!string.IsNullOrWhiteSpace(StringFormat))
