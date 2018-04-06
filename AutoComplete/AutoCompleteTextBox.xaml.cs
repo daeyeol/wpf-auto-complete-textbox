@@ -28,13 +28,28 @@ namespace AutoComplete
 
         private static readonly DependencyProperty ItemsSourceProperty =
             DependencyProperty.Register("ItemsSource",
-                typeof(List<string>),
+                typeof(List<object>),
                 typeof(AutoCompleteTextBox));
 
-        public List<string> ItemsSource
+        public List<object> ItemsSource
         {
-            get { return (List<string>)GetValue(ItemsSourceProperty); }
+            get { return (List<object>)GetValue(ItemsSourceProperty); }
             set { SetValue(ItemsSourceProperty, value); }
+        }
+
+        #endregion
+
+        #region ItemPath
+
+        private static readonly DependencyProperty ItemPathProperty =
+            DependencyProperty.Register("ItemPath",
+                typeof(string),
+                typeof(AutoCompleteTextBox));
+
+        public string ItemPath
+        {
+            get { return (string)GetValue(ItemPathProperty); }
+            set { SetValue(ItemPathProperty, value); }
         }
 
         #endregion
@@ -50,6 +65,32 @@ namespace AutoComplete
         {
             get { return (string)GetValue(StringFormatProperty); }
             set { SetValue(StringFormatProperty, value); }
+        }
+
+        #endregion
+
+        #region ItemTemplate
+
+        private static readonly DependencyProperty ItemTemplateProperty =
+            DependencyProperty.Register("ItemTemplate",
+                typeof(DataTemplate),
+                typeof(AutoCompleteTextBox),
+                new PropertyMetadata(ChangedItemTemplateProperty));
+
+        private static void ChangedItemTemplateProperty(DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        {
+            var textbox = obj as AutoCompleteTextBox;
+
+            if (textbox._listBox != null)
+            {
+                textbox._listBox.ItemTemplate = e.NewValue as DataTemplate;
+            }
+        }
+
+        public DataTemplate ItemTemplate
+        {
+            get { return (DataTemplate)GetValue(ItemTemplateProperty); }
+            set { SetValue(ItemTemplateProperty, value); }
         }
 
         #endregion
@@ -86,6 +127,11 @@ namespace AutoComplete
             {
                 throw new NotImplementedException("PART_ListBox is not found.");
             }
+
+            if(ItemTemplate != null)
+            {
+                _listBox.ItemTemplate = ItemTemplate;
+            }
         }
 
         #endregion
@@ -106,10 +152,15 @@ namespace AutoComplete
         {
             base.OnTextChanged(e);
 
-            if (ItemsSource == null ||
-                ItemsSource.Count == 0||
-                _startIndex == -1 || _startIndex > SelectionStart)
+            if (ItemsSource == null || ItemsSource.Count == 0||
+                _startIndex == -1)
             {
+                return;
+            }
+
+            if(_startIndex > SelectionStart)
+            {
+                _startIndex = SelectionStart;
                 return;
             }
 
@@ -153,7 +204,7 @@ namespace AutoComplete
                     }
                     else if (e.Key == Key.Return || e.Key == Key.Tab)
                     {
-                        var text = _listBox.SelectedItem as string;
+                        var text = GetItemText(_listBox.SelectedItem);
 
                         if (!string.IsNullOrWhiteSpace(StringFormat))
                         {
@@ -198,7 +249,7 @@ namespace AutoComplete
             }
             else
             {
-                var suggestions = ItemsSource.Where(s => s.StartsWith(text)).ToList();
+                var suggestions = ItemsSource.Where(s => GetItemText(s).StartsWith(text)).ToList();
 
                 if (suggestions.Count > 0)
                 {
@@ -219,6 +270,25 @@ namespace AutoComplete
                 {
                     _popup.IsOpen = false;
                 }
+            }
+        }
+
+        private string GetItemText(object item)
+        {
+            if (string.IsNullOrWhiteSpace(ItemPath))
+            {
+                return item.ToString();
+            }
+            else
+            {
+                var property =item.GetType().GetProperty(ItemPath);
+
+                if(property != null)
+                {
+                    return property.GetValue(item).ToString();
+                }
+
+                return null;
             }
         }
 

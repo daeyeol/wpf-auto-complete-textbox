@@ -6,8 +6,20 @@
         xmlns:local="clr-namespace:AutoComplete"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="AutoCompleteTextBox" Height="300" Width="600">
+        Title="AutoCompleteTextBox" Height="600" Width="600">
     <Grid>
-        <local:AutoCompleteTextBox x:Name="autoTextBox" Width="450" Height="200" AcceptsReturn="True"/>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="Default"/>
+            <local:AutoCompleteTextBox x:Name="autoTextBox1" Width="450" Height="200" AcceptsReturn="True" Margin="0,0,0,30"/>
+
+            <TextBlock Text="ItemPath"/>
+            <local:AutoCompleteTextBox x:Name="autoTextBox2" Width="450" Height="200" AcceptsReturn="True">
+                <local:AutoCompleteTextBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </local:AutoCompleteTextBox.ItemTemplate>
+            </local:AutoCompleteTextBox>
+        </StackPanel>
     </Grid>
 </Window>
