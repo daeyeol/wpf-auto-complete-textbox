@@ -39,6 +39,21 @@ namespace AutoComplete
 
         #endregion
 
+        #region StringFormat
+
+        private static readonly DependencyProperty StringFormatProperty =
+            DependencyProperty.Register("StringFormat",
+                typeof(string),
+                typeof(AutoCompleteTextBox));
+
+        public string StringFormat
+        {
+            get { return (string)GetValue(StringFormatProperty); }
+            set { SetValue(StringFormatProperty, value); }
+        }
+
+        #endregion
+
         #endregion
 
         #region Constructor
@@ -138,8 +153,15 @@ namespace AutoComplete
                     }
                     else if (e.Key == Key.Return || e.Key == Key.Tab)
                     {
+                        var text = _listBox.SelectedItem as string;
+
+                        if (!string.IsNullOrWhiteSpace(StringFormat))
+                        {
+                            text = string.Format(StringFormat, text);
+                        }
+
                         Select(_startIndex, SelectionStart - _startIndex);
-                        SelectedText = _listBox.SelectedItem as string;
+                        SelectedText = text;
                         SelectionStart = _startIndex + SelectedText.Length;
 
                         _startIndex = -1;
@@ -153,11 +175,13 @@ namespace AutoComplete
                         _listBox.ItemsSource = null;
                     }
                 }
-            }
-
-            if (e.Key == Key.Return)
-            {
-                _startIndex = -1;
+                else
+                {
+                    if (e.Key == Key.Return)
+                    {
+                        _startIndex = -1;
+                    }
+                }
             }
         }
 
@@ -183,11 +207,11 @@ namespace AutoComplete
                     if (!_popup.IsOpen)
                     {
                         _listBox.SelectedIndex = 0;
+
                         var rect = GetRectFromCharacterIndex(_startIndex);
 
                         _popup.HorizontalOffset = rect.X;
                         _popup.VerticalOffset = -ActualHeight + rect.Height * (GetLineIndexFromCharacterIndex(SelectionStart) + 1) + 2;
-
                         _popup.IsOpen = true;
                     }
                 }

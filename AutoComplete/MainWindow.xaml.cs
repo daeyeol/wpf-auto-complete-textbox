@@ -16,6 +16,8 @@ namespace AutoComplete
                 "bcdefg",
                 "cdefg"
             };
+
+            autoTextBox.StringFormat = "{{{0}}}";
         }
     }
 }
