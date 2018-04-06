@@ -95,6 +95,22 @@ namespace AutoComplete
 
         #endregion
 
+        #region PopupVerticalOffset
+
+        private static readonly DependencyProperty PopupVerticalOffsetProperty =
+            DependencyProperty.Register("PopupVerticalOffset",
+                typeof(double),
+                typeof(AutoCompleteTextBox),
+                new PropertyMetadata(2d));
+
+        public double PopupVerticalOffset
+        {
+            get { return (double)GetValue(PopupVerticalOffsetProperty); }
+            set { SetValue(PopupVerticalOffsetProperty, value); }
+        }
+
+        #endregion
+
         #endregion
 
         #region Constructor
@@ -128,10 +144,12 @@ namespace AutoComplete
                 throw new NotImplementedException("PART_ListBox is not found.");
             }
 
-            if(ItemTemplate != null)
+            if (ItemTemplate != null)
             {
                 _listBox.ItemTemplate = ItemTemplate;
             }
+
+            _listBox.MouseDoubleClick += (s, e) => SelectItem();
         }
 
         #endregion
@@ -204,19 +222,7 @@ namespace AutoComplete
                     }
                     else if (e.Key == Key.Return || e.Key == Key.Tab)
                     {
-                        var text = GetItemText(_listBox.SelectedItem);
-
-                        if (!string.IsNullOrWhiteSpace(StringFormat))
-                        {
-                            text = string.Format(StringFormat, text);
-                        }
-
-                        Select(_startIndex, SelectionStart - _startIndex);
-                        SelectedText = text;
-                        SelectionStart = _startIndex + SelectedText.Length;
-
-                        _startIndex = -1;
-                        _popup.IsOpen = false;
+                        SelectItem();
 
                         e.Handled = true;
                     }
@@ -262,7 +268,7 @@ namespace AutoComplete
                         var rect = GetRectFromCharacterIndex(_startIndex);
 
                         _popup.HorizontalOffset = rect.X;
-                        _popup.VerticalOffset = -ActualHeight + rect.Height * (GetLineIndexFromCharacterIndex(SelectionStart) + 1) + 2;
+                        _popup.VerticalOffset = -ActualHeight + rect.Height * (GetLineIndexFromCharacterIndex(SelectionStart) + 1) + PopupVerticalOffset;
                         _popup.IsOpen = true;
                     }
                 }
@@ -271,6 +277,23 @@ namespace AutoComplete
                     _popup.IsOpen = false;
                 }
             }
+        }
+
+        private void SelectItem()
+        {
+            var text = GetItemText(_listBox.SelectedItem);
+
+            if (!string.IsNullOrWhiteSpace(StringFormat))
+            {
+                text = string.Format(StringFormat, text);
+            }
+
+            Select(_startIndex, SelectionStart - _startIndex);
+            SelectedText = text;
+            SelectionStart = _startIndex + SelectedText.Length;
+
+            _startIndex = -1;
+            _popup.IsOpen = false;
         }
 
         private string GetItemText(object item)
