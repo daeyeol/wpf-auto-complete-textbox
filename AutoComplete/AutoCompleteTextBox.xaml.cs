@@ -120,6 +120,8 @@ namespace AutoComplete
             InitializeComponent();
 
             _startIndex = -1;
+
+            LostFocus += (s, e) => _popup.IsOpen = false;
         }
 
         #endregion
